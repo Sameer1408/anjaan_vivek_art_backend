@@ -27,9 +27,16 @@ public class CartService {
 
         if(p.isSold()) throw new RuntimeException("Painting is sold out.");
 
-        // Prevent adding individual item if bundle exists
+        // ✅ CHECK 1: Is this specific painting already in the user's cart?
+        if (cartRepository.existsByUserAndPainting(user, p)) {
+            throw new RuntimeException("This painting is already in your cart."); 
+            // Note: You can throw a custom exception mapped to 409 Conflict in a global handler, 
+            // or rely on the Controller to catch this message.
+        }
+
+        // ✅ CHECK 2: Is this painting part of a Series Bundle that is already in the cart?
         if (p.getSeries() != null && cartRepository.existsByUserAndSeriesName(user, p.getSeries())) {
-            throw new RuntimeException("The '" + p.getSeries() + "' bundle is already in your cart.");
+            throw new RuntimeException("The complete '" + p.getSeries() + "' bundle is already in your cart. Remove the bundle to add individual items.");
         }
 
         Cart cart = new Cart();
@@ -56,7 +63,7 @@ public class CartService {
             throw new RuntimeException("This series is already in your cart.");
         }
 
-        // Remove individual items of this series from cart
+        // Remove individual items of this series from cart (Upgrade to Bundle)
         List<Cart> existingItems = cartRepository.findByUser(user);
         for (Cart c : existingItems) {
             if (c.getPainting() != null && seriesName.equals(c.getPainting().getSeries())) {
@@ -81,7 +88,7 @@ public class CartService {
         cartRepository.save(cart);
     }
 
-    // ✅ 3. Get Cart (Populates Bundle Data)
+    // 3. Get Cart (Populates Bundle Data)
     public List<Cart> getMyCart(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
         List<Cart> cartItems = cartRepository.findByUser(user);

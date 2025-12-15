@@ -20,8 +20,13 @@ public class CartController {
 
     @PostMapping("/add/{paintingId}")
     public ResponseEntity<String> addToCart(@PathVariable Long paintingId, Principal principal) {
-        cartService.addToCart(principal.getName(), paintingId);
-        return ResponseEntity.ok("Added to cart");
+        try {
+            cartService.addToCart(principal.getName(), paintingId);
+            return ResponseEntity.ok("Added to cart");
+        } catch (RuntimeException e) {
+            // Return 409 Conflict if item exists
+            return ResponseEntity.status(409).body(e.getMessage());
+        }
     }
 
     // ✅ NEW ENDPOINT: Add Series
