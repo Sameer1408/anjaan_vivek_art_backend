@@ -24,26 +24,31 @@ public class PaintingService {
     private Cloudinary cloudinary;
 
     public Painting savePainting(Painting painting, List<MultipartFile> files) throws IOException {
+        
+        // If categoryType wasn't provided, default to STUDIO
+        if (painting.getCategoryType() == null || painting.getCategoryType().isEmpty()) {
+            painting.setCategoryType("STUDIO");
+        }
 
         List<PaintingImage> imageList = new ArrayList<>();
 
-        for (MultipartFile file : files) {
+        if (files != null && !files.isEmpty()) {
+            for (MultipartFile file : files) {
+                Map uploadResult = cloudinary.uploader().upload(
+                        file.getBytes(),
+                        ObjectUtils.asMap("folder", "artist_paintings")
+                );
 
-            Map uploadResult = cloudinary.uploader().upload(
-                    file.getBytes(),
-                    ObjectUtils.asMap("folder", "artist_paintings")
-            );
+                String imageUrl = uploadResult.get("secure_url").toString();
 
-            String imageUrl = uploadResult.get("secure_url").toString();
+                PaintingImage img = new PaintingImage();
+                img.setImageUrl(imageUrl);
+                img.setPainting(painting);
 
-            PaintingImage img = new PaintingImage();
-            img.setImageUrl(imageUrl);
-            img.setPainting(painting);
-
-            imageList.add(img);
+                imageList.add(img);
+            }
+            painting.setImages(imageList);
         }
-
-        painting.setImages(imageList);
 
         return paintingRepository.save(painting);
     }
@@ -55,4 +60,7 @@ public class PaintingService {
     public Painting getPaintingById(Long id) {
         return paintingRepository.findById(id).orElse(null);
     }
+    
+    // You can add a specific method to filter by category if needed later
+    // public List<Painting> getPaintingsByCategory(String category) { ... }
 }

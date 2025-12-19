@@ -28,7 +28,10 @@ public class Painting {
 
     private String offer;
 
-    // ✅ NEW FIELD: To track inventory
+    // ✅ NEW FIELD: To distinguish Premium vs Regular works
+    // Values: "SIGNATURE" (Premium) or "STUDIO" (Regular/Experimental)
+    private String categoryType; 
+
     private boolean sold = false; 
 
     @OneToMany(mappedBy = "painting", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -66,7 +69,9 @@ public class Painting {
     public String getOffer() { return offer; }
     public void setOffer(String offer) { this.offer = offer; }
 
-    // ✅ Getter/Setter for sold
+    public String getCategoryType() { return categoryType; }
+    public void setCategoryType(String categoryType) { this.categoryType = categoryType; }
+
     public boolean isSold() { return sold; }
     public void setSold(boolean sold) { this.sold = sold; }
 
